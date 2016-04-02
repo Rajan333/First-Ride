@@ -10,8 +10,6 @@ BOOT_DRIVE="/dev/sd"$DRIVE_NAME"1"
 ROOT_DRIVE="/dev/sd"$DRIVE_NAME"2"
 CONTENT_DRIVE="/dev/sd"$DRIVE_NAME"3"
 
-echo $BOOT_DRIVE $ROOT_DRIVE $CONTENT_DRIVE
-exit
 # Make Directories if not exist
 mkdir -p /mnt/boot /mnt/root /mnt/content
 
