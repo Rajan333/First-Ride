@@ -10,5 +10,9 @@ python scripts/python/getVersionDump.py $VERSION_ID > json/output.json 2>&1
 # Convert the json to box format
 python scripts/python/jsonparser.py json/output.json json/new_box.json others/file.csv
 
+# Make gparted card
+    #sudo bash gparted.sh
+#Mount the card
+    
 
 
