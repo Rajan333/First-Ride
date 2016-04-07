@@ -1,3 +1,6 @@
+# How to use:
+# python jsonparser.py <old.json> <new.json> <media-url-file>
+
 import requests
 import json
 import os
@@ -25,7 +28,7 @@ readjson = json.loads(data)
 
 feeds = readjson['feeds']
 key_list = ['channel', 'content', 'collection']
-localurl = []
+localurl = {}
 
 channel_list = set()
 content_list = set()
@@ -46,7 +49,7 @@ for itemkey in key_list:
         if tempdata['type'] == 'video':
             url = tempdata['localUrl']
             content_id = tempdata['ppId']
-            localurl.append([tempdata['ppId'], url])
+            localurl[content_id] = url
             tempurl = url.split('/')[-1].split('.')
             content_list.add(url)
             value['itemData']['localUrl'] = STREAM_STATIC+str(content_id)+"/"+str(tempurl[1])
@@ -56,7 +59,7 @@ for itemkey in key_list:
         # print value['itemData']['posterSmall']
 
         if 'preRollPool' in tempdata:
-            print tempdata
+            # print tempdata
             url = tempdata['preRollPool'][0]['playbackUrl']
             sponsor_list.add(url)
             tempurl = url.split('/')[-1].split('.')
@@ -75,7 +78,7 @@ for itemkey in key_list:
             value['itemData']['topBarSponsor']['image'] = POSTER_STATIC+url.split('/')[-1]
 
             if value['itemData']['topBarSponsor']['packageName'] != '':
-                value['itemData']['topBarSponsor']['downloadUrl'] = 'http://pressplaytv.in/download-app/'+value['itemData']['topBarSponsor']['ppId']+'/ANDROID' 
+                value['itemData']['topBarSponsor']['downloadUrl'] = 'http://pressplaytv.in/download-app/'+value['itemData']['topBarSponsor']['ppId']+'/ANDROID'
 
             # print value['itemData']['topBarSponsor']['image']
 
@@ -97,6 +100,7 @@ for itemkey in key_list:
                             url = faltudata['localUrl']
                             content_id = faltudata['ppId']
                             content_list.add(url)
+                            localurl[content_id] = url
                             tempurl = url.split('/')[-1].split('.')
                             value['itemContents'][i][j]['localUrl'] = STREAM_STATIC+str(content_id)+"/"+str(tempurl[1])
                             value['itemContents'][i][j]['downloadUrl'] = DOWNLOAD_STATIC+str(content_id)+"/"+str(tempurl[1])
@@ -107,7 +111,7 @@ for itemkey in key_list:
                             url = faltudata['poster']
                             sponsor_list.add(url)
                             value['itemContents'][i][j]['poster'] = POSTER_STATIC+url.split('/')[-1]
-                            value['itemContents'][i][j]['sponsorInfo']['downloadUrl'] = 'http://pressplaytv.in/download-app/'+value['itemContents'][i][j]['sponsorInfo']['ppId']+'/ANDROID'                          
+                            value['itemContents'][i][j]['sponsorInfo']['downloadUrl'] = 'http://pressplaytv.in/download-app/'+value['itemContents'][i][j]['sponsorInfo']['ppId']+'/ANDROID'
 
                             url = faltudata['sponsorInfo']['logo']
                             sponsor_list.add(url)
@@ -134,7 +138,7 @@ for itemkey in key_list:
                                 value['itemContents'][i][j]['topBarSponsor']['image'] = POSTER_STATIC+url.split('/')[-1]
 
                                 if faltudata['topBarSponsor']['packageName'] != '':
-                                    faltudata['topBarSponsor']['downloadUrl'] = 'http://pressplaytv.in/download-app/'+faltudata['topBarSponsor']['ppId']+'/ANDROID' 
+                                    faltudata['topBarSponsor']['downloadUrl'] = 'http://pressplaytv.in/download-app/'+faltudata['topBarSponsor']['ppId']+'/ANDROID'
 
         except TypeError, e:
             print e
@@ -157,6 +161,7 @@ for newkey, value in readjson['feeds'].iteritems():
                     url = faltudata['localUrl']
                     content_id = faltudata['ppId']
                     content_list.add(url)
+                    localurl[content_id] = url
                     tempurl = url.split('/')[-1].split('.')
                     value[i][j]['localUrl'] = STREAM_STATIC+str(content_id)+"/"+str(tempurl[1])
                     value[i][j]['downloadUrl'] = "http://pressplaytv.in/dowload/"+str(content_id)+"/"+str(tempurl[1])
@@ -169,7 +174,7 @@ for newkey, value in readjson['feeds'].iteritems():
                 url = faltudata['sponsorInfo']['logo']
                 sponsor_list.add(url)
                 #####nanda##
-                value[i][j]['sponsorInfo']['downloadUrl']='http://pressplaytv.in/download-app/'+faltudata['sponsorInfo']['ppId']+'/ANDROID' 
+                value[i][j]['sponsorInfo']['downloadUrl']='http://pressplaytv.in/download-app/'+faltudata['sponsorInfo']['ppId']+'/ANDROID'
                 value[i][j]['sponsorInfo']['logo'] = POSTER_STATIC+url.split('/')[-1]
 
                 url = faltudata['sponsorInfo']['image']
@@ -193,32 +198,50 @@ for newkey, value in readjson['feeds'].iteritems():
                     value[i][j]['topBarSponsor']['image'] = POSTER_STATIC+url.split('/')[-1]
 
                     if faltudata['topBarSponsor']['packageName'] != '':
-                        faltudata['topBarSponsor']['downloadUrl'] = 'http://pressplaytv.in/download-app/'+faltudata['topBarSponsor']['ppId']+'/ANDROID' 
+                        faltudata['topBarSponsor']['downloadUrl'] = 'http://pressplaytv.in/download-app/'+faltudata['topBarSponsor']['ppId']+'/ANDROID'
 
 # for saving new json
 with open(newfilepath, 'w') as data_file:
     data_file.write(json.dumps(readjson))
+data_file.close()
 
-print newfilepath
+print 'Converted json:\t', newfilepath
 
+outfile2 = open(mp4filepath, 'w')
+for key, value in localurl.iteritems():
+    split_name = str(value).split('/')[-1].split('.')
+    raw_id = split_name[0]
+    extension = split_name[1]
+    old_name = "%s.%s" % (raw_id, extension)
+    new_name = "%s.%s" % (key, extension)
+    outfile2.write('%s,%s,%s\n' % (old_name, new_name, value))
+
+outfile2.close()
+print 'Media Url File:\t', mp4filepath
+print 'Content Items:\t', len(localurl)
+error_file = open('others/errorlinks.txt', 'w')
 
 def download_file(url, directory):
     local_filename = url.split('/')[-1]
     filepath = '%s/%s' % (directory, local_filename)
-    print 'Downloading... ' + local_filename
-    r = requests.get(url, stream=True)
-    with open(filepath, 'wb') as f:
-        for chunk in r.iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
+    if os.path.isfile(filepath):
+        print 'File already exists...' + local_filename
+    else:
+        print 'Downloading... ' + local_filename
+        try:
+            r = requests.get(url, stream=True, timeout=300)
+            with open(filepath, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=1024):
+                    if chunk:
+                        f.write(chunk)
+            f.close()
+        except:
+            print 'ERROR: ', url
+            error_file.write(url + '\n')
     return True
 
 master_list = list(channel_list) + list(content_list) + list(sponsor_list)
 
-outfile2 = open(mp4filepath, 'w')
-
-for item in localurl:
-    outfile2.write('%s,%s\n' % (item[0], item[1]))
 # for downloading files
 
 
