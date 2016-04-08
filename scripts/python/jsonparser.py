@@ -1,5 +1,5 @@
 # How to use:
-# python jsonparser.py <old.json> <new.json> <media-url-file>
+# python jsonparser.py <old.json> <new.json> <media-url-file> <app-links-file-path>
 
 import requests
 import json
@@ -14,6 +14,7 @@ UNCHAINED_STATIC = "http://pressplaytv.in/stream/unchained/"
 filepath = sys.argv[1]
 newfilepath = sys.argv[2]
 mp4filepath = sys.argv[3]
+applinksfilepath = sys.argv[4]
 
 dirlist = ['contentitems', 'sponsoritems', 'channelitems']
 
@@ -33,6 +34,7 @@ localurl = {}
 channel_list = set()
 content_list = set()
 sponsor_list = set()
+app_links = set()
 
 for itemkey in key_list:
     for key, value in readjson[itemkey].iteritems():
@@ -71,6 +73,12 @@ for itemkey in key_list:
             url = tempdata['topBarSponsor']['logo']
             sponsor_list.add(url)
             value['itemData']['topBarSponsor']['logo'] = POSTER_STATIC+url.split('/')[-1]
+            if 'playStoreUrl' in tempdata['topBarSponsor']:
+                if len(tempdata['topBarSponsor']['playStoreUrl']) > 1:
+                    app_links.add(tempdata['topBarSponsor']['playStoreUrl'])
+            if 'iosStoreUrl' in tempdata['topBarSponsor']:
+                if len(tempdata['topBarSponsor']['iosStoreUrl']) > 1:
+                    app_links.add(tempdata['topBarSponsor']['iosStoreUrl'])
             # print value['itemData']['topBarSponsor']['logo']
 
             url = tempdata['topBarSponsor']['image']
@@ -189,6 +197,12 @@ for newkey, value in readjson['feeds'].iteritems():
                     value[i][j]['preRollPool'][0]['playbackUrl'] = UNCHAINED_STATIC+str(tempurl[0])+"/"+str(tempurl[1])
 
                 if 'topBarSponsor' in faltudata:
+                    if 'playStoreUrl' in faltudata['topBarSponsor']:
+                        if len(faltudata['topBarSponsor']['playStoreUrl']) > 1:
+                            app_links.add(faltudata['topBarSponsor']['playStoreUrl'])
+                    if 'iosStoreUrl' in faltudata['topBarSponsor']:
+                        if len(faltudata['topBarSponsor']['iosStoreUrl']) > 1:
+                            app_links.add(faltudata['topBarSponsor']['iosStoreUrl'])
                     url = faltudata['topBarSponsor']['logo']
                     sponsor_list.add(url)
                     value[i][j]['topBarSponsor']['logo'] = POSTER_STATIC+url.split('/')[-1]
@@ -217,8 +231,16 @@ for key, value in localurl.iteritems():
     outfile2.write('%s,%s,%s\n' % (old_name, new_name, value))
 
 outfile2.close()
+
+appfile = open(applinksfilepath, 'w')
+for applink in app_links:
+    appfile.write(applink+'\n')
+appfile.close()
+
 print 'Media Url File:\t', mp4filepath
+print 'App Links File:\t', applinksfilepath
 print 'Content Items:\t', len(localurl)
+
 error_file = open('others/errorlinks.txt', 'w')
 
 def download_file(url, directory):
