@@ -1,0 +1,9 @@
+downloadfiles/
+*.zip
+*.log
+*.lock
+temp*
+builder*
+aunty*
+pratush*
+devmeet*
